@@ -1,4 +1,5 @@
 // lib/utils/kakuro_solver.dart
+import 'dart:async';
 
 class KakuroPuzzle {
   int count = 0;
@@ -12,6 +13,11 @@ class KakuroPuzzle {
   final List<List<int>> clueGrids = [];
   final List<List<int>> emptyGrids = [];
   late final List<List<int>> question;
+
+  // Limits
+  final int maxSteps = 100000; // step cap
+  final Duration maxTime = Duration(seconds: 5); // time cap
+  late DateTime startTime;
 
   KakuroPuzzle(this.rowClues, this.colClues, this.caseNumber)
     : rows =
@@ -61,16 +67,26 @@ class KakuroPuzzle {
 
   bool solveBacktrack() {
     count = 0;
+    startTime = DateTime.now();
     print("Starting backtracking solver...");
     return _solveBacktrackHelper(0, 0);
   }
 
   bool _solveBacktrackHelper(int row, int col) {
     count++;
+    if (count > maxSteps) {
+      print("Stopped: step limit exceeded");
+      return false;
+    }
+    if (DateTime.now().difference(startTime) > maxTime) {
+      print("Stopped: time limit exceeded");
+      return false;
+    }
+
     if (row > rows - 1) return isSolution();
 
     final nextRow = (col == cols - 1) ? row + 1 : row;
-    final nextCol = (col == cols - 1) ? 1 : col + 1;
+    final nextCol = (col == cols - 1) ? 0 : col + 1;
 
     if (board[row][col] != 0) {
       return _solveBacktrackHelper(nextRow, nextCol);
@@ -110,28 +126,46 @@ class KakuroPuzzle {
   }
 
   bool isValid(int row, int col, int num) {
-    // simplified validity checks with debug prints
-    // uniqueness and sum bounding
+    // Row uniqueness and pruning
     for (final clue in rowClues) {
       if (clue[0] == row && col >= clue[1] && col <= clue[2]) {
-        if (board[row].sublist(clue[1], clue[2] + 1).contains(num))
-          return false;
-        int total = board[row]
-            .sublist(clue[1], clue[2] + 1)
-            .fold(0, (a, b) => a + b);
-        if (total + num > clue[3]) return false;
+        // uniqueness
+        for (int j = clue[1]; j <= clue[2]; j++) {
+          if (board[row][j] == num) return false;
+        }
+        // partial sum pruning
+        int total = 0, filled = 0;
+        for (int j = clue[1]; j <= clue[2]; j++) {
+          total += board[row][j];
+          if (board[row][j] != 0) filled++;
+        }
+        int cells = clue[2] - clue[1] + 1;
+        int remaining = cells - filled - 1; // minus current cell
+        int minPossible = total + num + remaining; // worst case (all 1s)
+        int maxPossible = total + num + 9 * remaining;
+        if (minPossible > clue[3] || maxPossible < clue[3]) return false;
       }
     }
+
+    // Column uniqueness and pruning
     for (final clue in colClues) {
       if (clue[0] == col && row >= clue[1] && row <= clue[2]) {
         for (int i = clue[1]; i <= clue[2]; i++) {
           if (board[i][col] == num) return false;
         }
-        int total = 0;
-        for (int i = clue[1]; i <= clue[2]; i++) total += board[i][col];
-        if (total + num > clue[3]) return false;
+        int total = 0, filled = 0;
+        for (int i = clue[1]; i <= clue[2]; i++) {
+          total += board[i][col];
+          if (board[i][col] != 0) filled++;
+        }
+        int cells = clue[2] - clue[1] + 1;
+        int remaining = cells - filled - 1;
+        int minPossible = total + num + remaining;
+        int maxPossible = total + num + 9 * remaining;
+        if (minPossible > clue[3] || maxPossible < clue[3]) return false;
       }
     }
+
     return true;
   }
 }
