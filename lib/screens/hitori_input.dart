@@ -1,15 +1,14 @@
-// lib/screens/sudoku_input.dart
 import 'package:flutter/material.dart';
-import '../utils/sudokusolver.dart';
-import 'sudoku_result.dart';
+import '../utils/hitori_solver.dart';
+import 'hitori_result.dart';
 
-class SudokuInputScreen extends StatefulWidget {
+class HitoriInputScreen extends StatefulWidget {
   @override
-  _SudokuInputScreenState createState() => _SudokuInputScreenState();
+  _HitoriInputScreenState createState() => _HitoriInputScreenState();
 }
 
-class _SudokuInputScreenState extends State<SudokuInputScreen> {
-  List<List<int>> grid = List.generate(9, (_) => List.filled(9, 0));
+class _HitoriInputScreenState extends State<HitoriInputScreen> {
+  List<List<int>> grid = List.generate(5, (_) => List.filled(5, 0));
   int? selectedNumber;
 
   void setCell(int row, int col) {
@@ -26,29 +25,23 @@ class _SudokuInputScreenState extends State<SudokuInputScreen> {
 
   void resetGrid() {
     setState(() {
-      grid = List.generate(9, (_) => List.filled(9, 0));
+      grid = List.generate(5, (_) => List.filled(5, 0));
       selectedNumber = null;
     });
   }
 
   void submitGrid() {
-    // Validate before solving
-    if (!isValidSudokuGrid(grid)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("No solution detected (invalid input)")),
-      );
-      return;
-    }
-
-    List<List<int>> solved = List.generate(9, (i) => List.from(grid[i]));
-    bool ok = solveSudoku(solved);
-
-    if (ok) {
+    // Build Cell objects for solver
+    final hitoriGrid = List.generate(
+      5,
+      (r) => List.generate(5, (c) => Cell(r, c, grid[r][c])),
+    );
+    final solver = HitoriSolver(hitoriGrid);
+    final solved = solver.solve();
+    if (solved) {
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (_) => SudokuResultScreen(solvedGrid: solved),
-        ),
+        MaterialPageRoute(builder: (_) => HitoriResultScreen(grid: hitoriGrid)),
       );
     } else {
       ScaffoldMessenger.of(
@@ -59,21 +52,16 @@ class _SudokuInputScreenState extends State<SudokuInputScreen> {
 
   Widget buildGrid() {
     return Column(
-      children: List.generate(9, (i) {
+      children: List.generate(5, (i) {
         return Row(
-          children: List.generate(9, (j) {
+          children: List.generate(5, (j) {
             return GestureDetector(
               onTap: () => setCell(i, j),
               onLongPress: () => eraseCell(i, j),
               child: Container(
-                width: 36,
-                height: 36,
-                margin: EdgeInsets.only(
-                  left: j % 3 == 0 ? 4 : 1,
-                  right: 1,
-                  top: i % 3 == 0 ? 4 : 1,
-                  bottom: 1,
-                ),
+                width: 48,
+                height: 48,
+                margin: EdgeInsets.all(2),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.white),
                   color: grid[i][j] == 0 ? Colors.black : Colors.blueGrey,
@@ -81,7 +69,7 @@ class _SudokuInputScreenState extends State<SudokuInputScreen> {
                 child: Center(
                   child: Text(
                     grid[i][j] == 0 ? '' : '${grid[i][j]}',
-                    style: TextStyle(fontSize: 18, color: Colors.white),
+                    style: TextStyle(fontSize: 20, color: Colors.white),
                   ),
                 ),
               ),
@@ -96,7 +84,7 @@ class _SudokuInputScreenState extends State<SudokuInputScreen> {
     return Wrap(
       spacing: 8,
       children: [
-        for (int num = 1; num <= 9; num++)
+        for (int num = 1; num <= 5; num++)
           ElevatedButton(
             onPressed: () => setState(() => selectedNumber = num),
             child: Text('$num'),
@@ -112,7 +100,7 @@ class _SudokuInputScreenState extends State<SudokuInputScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Sudoku Input')),
+      appBar: AppBar(title: Text('Hitori Input (5×5)')),
       body: Padding(
         padding: EdgeInsets.all(16),
         child: Column(

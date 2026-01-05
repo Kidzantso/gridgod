@@ -1,77 +1,81 @@
-// lib/utils/sudokusolver.dart
+// lib/utils/sudoku_solver.dart
 
-bool isSafe(
-  List<List<int>> mat,
-  int i,
-  int j,
-  int num,
-  List<int> row,
-  List<int> col,
-  List<int> box,
-) {
-  int boxIndex = (i ~/ 3) * 3 + (j ~/ 3);
-  if ((row[i] & (1 << num)) != 0 ||
-      (col[j] & (1 << num)) != 0 ||
-      (box[boxIndex] & (1 << num)) != 0) {
-    return false;
+bool solveSudoku(List<List<int>> grid) {
+  return _solve(grid, 0, 0);
+}
+
+bool _solve(List<List<int>> grid, int row, int col) {
+  if (row == 9) return true;
+
+  int nextRow = (col == 8) ? row + 1 : row;
+  int nextCol = (col == 8) ? 0 : col + 1;
+
+  if (grid[row][col] != 0) {
+    return _solve(grid, nextRow, nextCol);
+  }
+
+  for (int num = 1; num <= 9; num++) {
+    if (_isValid(grid, row, col, num)) {
+      grid[row][col] = num;
+      if (_solve(grid, nextRow, nextCol)) return true;
+      grid[row][col] = 0;
+    }
+  }
+  return false;
+}
+
+bool _isValid(List<List<int>> grid, int row, int col, int num) {
+  for (int i = 0; i < 9; i++) {
+    if (grid[row][i] == num || grid[i][col] == num) return false;
+  }
+  int startRow = row - row % 3;
+  int startCol = col - col % 3;
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      if (grid[startRow + i][startCol + j] == num) return false;
+    }
   }
   return true;
 }
 
-bool sudokuSolverRec(
-  List<List<int>> mat,
-  int i,
-  int j,
-  List<int> row,
-  List<int> col,
-  List<int> box,
-) {
-  int n = mat.length;
-
-  if (i == n - 1 && j == n) return true;
-  if (j == n) {
-    i++;
-    j = 0;
-  }
-
-  if (mat[i][j] != 0) return sudokuSolverRec(mat, i, j + 1, row, col, box);
-
-  for (int num = 1; num <= n; num++) {
-    if (isSafe(mat, i, j, num, row, col, box)) {
-      mat[i][j] = num;
-      int boxIndex = (i ~/ 3) * 3 + (j ~/ 3);
-      row[i] |= (1 << num);
-      col[j] |= (1 << num);
-      box[boxIndex] |= (1 << num);
-
-      if (sudokuSolverRec(mat, i, j + 1, row, col, box)) return true;
-
-      mat[i][j] = 0;
-      row[i] &= ~(1 << num);
-      col[j] &= ~(1 << num);
-      box[boxIndex] &= ~(1 << num);
-    }
-  }
-
-  return false;
-}
-
-void solveSudoku(List<List<int>> mat) {
-  int n = mat.length;
-  List<int> row = List.filled(n, 0);
-  List<int> col = List.filled(n, 0);
-  List<int> box = List.filled(n, 0);
-
-  for (int i = 0; i < n; i++) {
-    for (int j = 0; j < n; j++) {
-      if (mat[i][j] != 0) {
-        int boxIndex = (i ~/ 3) * 3 + (j ~/ 3);
-        row[i] |= (1 << mat[i][j]);
-        col[j] |= (1 << mat[i][j]);
-        box[boxIndex] |= (1 << mat[i][j]);
+/// Quick validation before solving: checks for duplicates in rows, cols, blocks
+bool isValidSudokuGrid(List<List<int>> grid) {
+  // rows
+  for (int r = 0; r < 9; r++) {
+    final seen = <int>{};
+    for (int c = 0; c < 9; c++) {
+      int val = grid[r][c];
+      if (val != 0) {
+        if (seen.contains(val)) return false;
+        seen.add(val);
       }
     }
   }
-
-  sudokuSolverRec(mat, 0, 0, row, col, box);
+  // cols
+  for (int c = 0; c < 9; c++) {
+    final seen = <int>{};
+    for (int r = 0; r < 9; r++) {
+      int val = grid[r][c];
+      if (val != 0) {
+        if (seen.contains(val)) return false;
+        seen.add(val);
+      }
+    }
+  }
+  // blocks
+  for (int br = 0; br < 9; br += 3) {
+    for (int bc = 0; bc < 9; bc += 3) {
+      final seen = <int>{};
+      for (int r = 0; r < 3; r++) {
+        for (int c = 0; c < 3; c++) {
+          int val = grid[br + r][bc + c];
+          if (val != 0) {
+            if (seen.contains(val)) return false;
+            seen.add(val);
+          }
+        }
+      }
+    }
+  }
+  return true;
 }

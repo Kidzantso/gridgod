@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'sudoku_input.dart';
 import 'kakuro_input.dart';
+import 'hitori_input.dart';
 
 class HomeScreen extends StatelessWidget {
   @override
@@ -29,6 +30,16 @@ class HomeScreen extends StatelessWidget {
                 );
               },
               child: Text('Play Kakuro'),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => HitoriInputScreen()),
+                );
+              },
+              child: Text('Play Hitori'),
             ),
           ],
         ),
