@@ -1,6 +1,6 @@
 // lib/screens/sudoku_input.dart
 import 'package:flutter/material.dart';
-import '../utils/sudokusolver.dart';
+import '../utils/sudoku_solver.dart';
 import 'sudoku_result.dart';
 
 class SudokuInputScreen extends StatefulWidget {

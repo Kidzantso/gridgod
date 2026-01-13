@@ -289,7 +289,7 @@ class _KakuroInputScreenState extends State<KakuroInputScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true, // fixes keyboard overlay
-      appBar: AppBar(title: Text('Kakuro Input (Interactive)')),
+      appBar: AppBar(title: Text('Kakuro Input')),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
         child: Column(
