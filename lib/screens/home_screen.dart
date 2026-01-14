@@ -3,6 +3,7 @@ import 'sudoku_input.dart';
 import 'kakuro_input.dart';
 import 'hitori_input.dart';
 import 'futoshiki_input.dart';
+import 'slitherlink_input.dart';
 
 class HomeScreen extends StatelessWidget {
   final List<_GameCard> games = [
@@ -25,6 +26,11 @@ class HomeScreen extends StatelessWidget {
       title: 'Futoshiki',
       image: 'assets/images/futoshiki-logo.png',
       builder: (_) => FutoshikiInputScreen(),
+    ),
+    _GameCard(
+      title: 'Slitherlink',
+      image: 'assets/images/slitherlink-logo.png',
+      builder: (_) => SlitherlinkInputScreen(),
     ),
   ];
 
